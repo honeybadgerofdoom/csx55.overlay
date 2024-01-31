@@ -81,7 +81,7 @@ public class MessagingNode implements Node {
     private void startEventQueue() {
         this.eventQueue = new ConcurrentLinkedQueue<>();
         EventProcessorThread eventProcessorThread = new EventProcessorThread(this);
-        int numberOfWorkers = 1;
+        int numberOfWorkers = 3;
         for (int i = 0; i < numberOfWorkers; i++) {
             Thread thread = new Thread(eventProcessorThread);
             thread.start();
