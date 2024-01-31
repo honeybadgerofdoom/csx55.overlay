@@ -301,23 +301,6 @@ public class MessagingNode implements Node {
     }
 
     private void handleTrafficSummary() {
-        /*
-        * TODO
-        *  - The eventQueue happens to be empty during the unit of time we do this check, but other messages
-        *   are still being relayed into it. If we get unlucky timing here, we'll report incomplete traffic
-        *   summary data
-        *  - Another problem with this is that the messages in this nodes eventQueue may be relayed to another node
-        *   that has already reported its traffic statistics
-        * */
-        while (!this.eventQueue.isEmpty()) {
-            try {
-                System.out.println("There are still events waiting to be processed...");
-                Thread.sleep(10 * 1000);
-            } catch (InterruptedException e) {
-                System.out.println("INTERRUPTED While waiting for queue to empty");
-            }
-        }
-        System.out.println("Event queue is empty, gathering traffic stats");
         TaskSummaryResponse taskSummaryResponse = new TaskSummaryResponse(
                 this.ipAddress,
                 this.portNumber,
@@ -363,13 +346,6 @@ public class MessagingNode implements Node {
         List<String> sinks = new ArrayList<>(this.allSinkNodes);
         int index = this.rng.nextInt(size);
         return sinks.get(index);
-    }
-
-    public String getRandomPartnerNode() {
-        int size = this.partnerNodes.size();
-        List<String> neighbors = new ArrayList<>(this.partnerNodes.keySet());
-        int index = this.rng.nextInt(size);
-        return neighbors.get(index);
     }
 
     private void buildPathRoutes() {
