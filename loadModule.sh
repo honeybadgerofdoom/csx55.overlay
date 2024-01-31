@@ -1,0 +1,1 @@
+cd CS555/csx555.overlay/ && source ~/.bashrc && module purge && module load courses/cs455

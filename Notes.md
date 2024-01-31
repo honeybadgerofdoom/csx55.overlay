@@ -1,0 +1,2 @@
+# Open Questions
+- Currently, when I store the IP:Port for a socket that come from a request, the IP is the node that received the request when it shouold (probably) be the node that issued the request.
