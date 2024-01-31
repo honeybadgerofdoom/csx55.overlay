@@ -1,16 +1,13 @@
 package csx55.overlay.transport;
 
 import csx55.overlay.node.Node;
-
-import java.net.InetAddress;
 import java.net.Socket;
-
 import java.io.IOException;
 import java.net.SocketException;
 
 public class TCPServerThread implements Runnable {
 
-    private Node messagingNode;
+    private final Node messagingNode;
 
     public TCPServerThread(Node messagingNode) {
         this.messagingNode = messagingNode;

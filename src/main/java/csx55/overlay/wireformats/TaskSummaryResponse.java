@@ -11,19 +11,12 @@ import java.io.BufferedInputStream;
 public class TaskSummaryResponse implements Event {
 
     private final int messageType = Protocol.TRAFFIC_SUMMARY;
-    private String ipAddress;
-    private int portNumber;
-    private int messagesSent;
-    private long sentSummation;
-    private int messagesReceived;
-    private long receivedSummation;
-    private int messagesRelayed;
-    private int directMessagesReceived;
-    private int directMessagesSent;
-    private int messages;
+    private final String ipAddress;
+    private final int portNumber, messagesSent, messagesReceived, messagesRelayed;
+    private final long sentSummation, receivedSummation;
 
 
-    public TaskSummaryResponse(String ipAddress, int portNumber, int messagesSent, long sentSummation, int messagesReceived, long receivedSummation, int messagesRelayed, int directMessagesReceived, int directMessagesSent, int messages) {
+    public TaskSummaryResponse(String ipAddress, int portNumber, int messagesSent, long sentSummation, int messagesReceived, long receivedSummation, int messagesRelayed) {
         this.ipAddress = ipAddress;
         this.portNumber = portNumber;
         this.messagesSent = messagesSent;
@@ -31,9 +24,6 @@ public class TaskSummaryResponse implements Event {
         this.messagesReceived = messagesReceived;
         this.receivedSummation = receivedSummation;
         this.messagesRelayed = messagesRelayed;
-        this.directMessagesReceived = directMessagesReceived;
-        this.directMessagesSent = directMessagesSent;
-        this.messages = messages;
     }
 
     public TaskSummaryResponse(byte[] bytes) throws IOException {
@@ -53,9 +43,6 @@ public class TaskSummaryResponse implements Event {
         this.messagesReceived = din.readInt();
         this.receivedSummation = din.readLong();
         this.messagesRelayed = din.readInt();
-        this.directMessagesReceived = din.readInt();
-        this.directMessagesSent= din.readInt();
-        this.messages = din.readInt();
 
         bArrayInputStream.close();
         din.close();
@@ -83,9 +70,6 @@ public class TaskSummaryResponse implements Event {
         dout.writeInt(this.messagesReceived);
         dout.writeLong(this.receivedSummation);
         dout.writeInt(this.messagesRelayed);
-        dout.writeInt(this.directMessagesReceived);
-        dout.writeInt(this.directMessagesSent);
-        dout.writeInt(this.messages);
 
         dout.flush();
         marshalledBytes = baOutputStream.toByteArray();
@@ -126,16 +110,4 @@ public class TaskSummaryResponse implements Event {
         return this.messagesRelayed;
     }
 
-    public int getDirectMessagesReceived() {
-        return this.directMessagesReceived;
-    }
-
-    public int getDirectMessagesSent() {
-        return this.directMessagesSent;
-    }
-
-    public int getMessages() {
-        return this.messages;
-    }
-    
 }

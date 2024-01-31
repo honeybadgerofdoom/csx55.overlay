@@ -10,15 +10,12 @@ import csx55.overlay.wireformats.*;
 import csx55.overlay.transport.TCPReceiverThread;
 import csx55.overlay.transport.TCPSender;
 import csx55.overlay.transport.MessagePassingThread;
-import csx55.overlay.util.Helpers;
-
 
 import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class MessagingNode implements Node {
@@ -39,69 +36,6 @@ public class MessagingNode implements Node {
     private ShortestPathCalculator shortestPathCalculator;
     private Set<String> allSinkNodes;
     private Random rng;
-
-    /**
-     * FIXME
-     *  Heisenbug Notes
-     *  - !IMPORTANT! This is probably it. Some sockets are being closed prematurely when relaying is involved
-     *      - I'm seeing nodes print 'null' then the statement I added: "TCPReceiverThread listening on Socket with remote address <socket> has closed."
-     *      - Only see this when relaying messages. What does this mean?
-     *      - If I see node A print out "TCPReceiverThread listening on Socket with remote address E has closed."
-     *          - Node A can no longer poke node E, and node E can no longer poke node A
-     *      - I observe that Sockets which tend to remain open have high associated weights (less traffic)
-     *          - This suggests that the traffic load is causing the socket to close
-     *              -> This would explain why slowing the relay threads down helps the problem sometimes
-     *              -> Also, setting the # of EventProcessing threads to 1 helps. Also explains this.
-     *
-     *  - Description
-     *      - Seeing less received messages than send messages
-     *      - Also seeing that relayed messages are too low
-     *  - !IMPORTANT! I added a Direct Messages column to the output
-     *      - Using this we can see that 99% of received messages were direct, ie not relayed
-     *      - Only a very small percentage ~1% of relayed messages are actually received
-     *      - The total relayed messages do not account for the loss of received messages, ie we're seeing excessively
-     *        low values for relayed messages AND received messages
-     *      - I also added a 'All Messages' column. Using this we can see that we're
-     *        only 'seeing' about 1/2 of send messages
-     *  - !IMPORTANT! I'm seeing 'null' print out, and also seeing failed calls to getEvent() AFTER message passing
-     *    begins for several MessagingNodes.
-     *      - Where is this 'null' coming from? It may indicate a closed partner socket. Maybe the socket it's trying
-     *        to relay messages to is closed?
-     *  1) Does NOT present when there is no relaying going on (each node only sends Messages with a routePlan of size 2)
-     *  2) The issue is with relaying
-     *      - When we only have 1 thread processing Events, the bug persists
-     *      - The bug presents even when I synchronize access to traffic variables
-     *      - This suggests the bug is not caused by concurrent reads/writes of the received traffic data
-     *  3) When I slow the threads down using print() statements or Thread.sleep(), the issue gets better
-     *      - Is actually fixed for smaller # of rounds
-     *      - This suggests it is NOT a problem with constructing & following route plans
-     *  4) IDEA: EventQueue pile-ups
-     *      - (8/10) nodes had reported traffic summary data, the other two were still relaying messages. Those
-     *        messages were being relayed into eventQueues belonging to nodes that had already report traffic
-     *        summary data, thus they were received BUT not count
-     *      - MessagingNode A may find itself with all its messages sent AND an empty eventQueue
-     *      - BUT its eventQueue is only empty for a tiny fraction of time - another MessagingNode (B) is still
-     *       relaying messages to it
-     *      - MessagingNode A reports its traffic data BEFORE it is actually done receiving relayed messages
-     *      - BUT don't all MessagingNodes wait to report traffic data until they're all done?
-     *           - Not if they happen to see an empty eventQueue at the moment they check. Other messages may
-     *             still be relayed into. That queue may get empty and then get filled up again.
-     *      - What to do?
-     *          - Wait until ALL MessagingNodes report "My eventQueue is empty" before any node sends summary data.
-     *      - However, when I sleep the Registry for 20 MINUTES after receiving TASK_COMPLETE from every node,
-     *        the issue persists
-     *  5) IDEA: Concurrent Socket access
-     *      - Maybe the threads calling TCPSender.sendData(byte[]) are trying to write to the socket at the same time?
-     *      - And the socket rejects all but one write?
-     *      - But the bug presents when only 1 thread is handling the eventQueue...
-     *  6) When I slow down the MessagePassingThread(s) the bug presents worse. That is, less messages are received
-     *      - What does this mean?
-     *      - Events are added to the eventQueue slower
-     *  7) IDEA: I'm seeing that every node has DM Sent == DM Received
-     *      - Why is that??
-     *      - Looks like nodes are sending messages to themselves??? That's why DM's work and relays don't?
-     *      - But then why does relaying work when threads slow down?
-     */
 
     public MessagingNode(String registryIpAddress, int registryPortNumber) {
         this.registryIpAddress = registryIpAddress;
@@ -147,7 +81,7 @@ public class MessagingNode implements Node {
     private void startEventQueue() {
         this.eventQueue = new ConcurrentLinkedQueue<>();
         EventProcessorThread eventProcessorThread = new EventProcessorThread(this);
-        int numberOfWorkers = 1;
+        int numberOfWorkers = 3;
         for (int i = 0; i < numberOfWorkers; i++) {
             Thread thread = new Thread(eventProcessorThread);
             thread.start();
@@ -367,23 +301,6 @@ public class MessagingNode implements Node {
     }
 
     private void handleTrafficSummary() {
-        /*
-        * TODO
-        *  - The eventQueue happens to be empty during the unit of time we do this check, but other messages
-        *   are still being relayed into it. If we get unlucky timing here, we'll report incomplete traffic
-        *   summary data
-        *  - Another problem with this is that the messages in this nodes eventQueue may be relayed to another node
-        *   that has already reported its traffic statistics
-        * */
-        while (!this.eventQueue.isEmpty()) {
-            try {
-                System.out.println("There are still events waiting to be processed...");
-                Thread.sleep(10 * 1000);
-            } catch (InterruptedException e) {
-                System.out.println("INTERRUPTED While waiting for queue to empty");
-            }
-        }
-        System.out.println("Event queue is empty, gathering traffic stats");
         TaskSummaryResponse taskSummaryResponse = new TaskSummaryResponse(
                 this.ipAddress,
                 this.portNumber,
@@ -391,10 +308,7 @@ public class MessagingNode implements Node {
                 this.trafficStats.getSendSummation(),
                 this.trafficStats.getReceiveTracker(),
                 this.trafficStats.getReceiveSummation(),
-                this.trafficStats.getRelayTracker(),
-                this.trafficStats.getDirectMessageSentTracker(),
-                this.trafficStats.getDirectMessageSentTracker(),
-                this.trafficStats.getMessageTracker());
+                this.trafficStats.getRelayTracker());
         try {
             byte[] bytes = taskSummaryResponse.getBytes();
             TCPSender sender = new TCPSender(this.socketToRegistry);
@@ -432,13 +346,6 @@ public class MessagingNode implements Node {
         List<String> sinks = new ArrayList<>(this.allSinkNodes);
         int index = this.rng.nextInt(size);
         return sinks.get(index);
-    }
-
-    public String getRandomPartnerNode() {
-        int size = this.partnerNodes.size();
-        List<String> neighbors = new ArrayList<>(this.partnerNodes.keySet());
-        int index = this.rng.nextInt(size);
-        return neighbors.get(index);
     }
 
     private void buildPathRoutes() {

@@ -4,7 +4,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class TrafficStats {
 
-    private int sendTracker, receiveTracker, relayTracker, directMessageReceiveTracker, directMessageSentTracker, messageTracker = 0;
+    private int sendTracker, receiveTracker, relayTracker = 0;
     private long sendSummation, receiveSummation = 0L;
 
     private final ReentrantLock receiveLock = new ReentrantLock();
@@ -14,9 +14,6 @@ public class TrafficStats {
         sendTracker = 0;
         receiveTracker = 0;
         relayTracker = 0;
-        directMessageReceiveTracker = 0;
-        directMessageSentTracker = 0;
-        messageTracker = 0;
         sendSummation = 0L;
         receiveSummation = 0L;
     }
@@ -26,37 +23,25 @@ public class TrafficStats {
         this.sendSummation += payload;
     }
 
-    public synchronized void updateReceivedMessages(long payload) {
-//        try {
-//            this.receiveLock.lock();
-//        } catch (Exception ignored) {
+    public void updateReceivedMessages(long payload) {
+        try {
+            this.receiveLock.lock();
             this.receiveTracker++;
             this.receiveSummation += payload;
-//        } finally {
-//            this.receiveLock.unlock();
-//        }
+        } catch (Exception ignored) {
+        } finally {
+            this.receiveLock.unlock();
+        }
     }
 
-    public synchronized void incrementRelayTracker() {
-//        try {
-//            this.relayLock.lock();
-//        } catch (Exception ignored) {
+    public void incrementRelayTracker() {
+        try {
+            this.relayLock.lock();
             this.relayTracker++;
-//        } finally {
-//            this.relayLock.unlock();
-//        }
-    }
-
-    public synchronized void incrementDirectMessageReceiveTracker() {
-        this.directMessageReceiveTracker++;
-    }
-
-    public synchronized void incrementDirectMessageSentTracker() {
-        this.directMessageSentTracker++;
-    }
-
-    public synchronized void incrementMessageTracker() {
-        this.messageTracker++;
+        } catch (Exception ignored) {
+        } finally {
+            this.relayLock.unlock();
+        }
     }
 
     public int getSendTracker() {
@@ -69,18 +54,6 @@ public class TrafficStats {
 
     public int getRelayTracker() {
         return relayTracker;
-    }
-
-    public int getDirectMessageReceiveTracker() {
-        return directMessageReceiveTracker;
-    }
-
-    public int getDirectMessageSentTracker() {
-        return directMessageSentTracker;
-    }
-
-    public int getMessageTracker() {
-        return messageTracker;
     }
 
     public long getSendSummation() {
