@@ -4,7 +4,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class TrafficStats {
 
-    private int sendTracker, receiveTracker, relayTracker, directMessageReceiveTracker, directMessageSentTracker, messageTracker = 0;
+    private int sendTracker, receiveTracker, relayTracker = 0;
     private long sendSummation, receiveSummation = 0L;
 
     private final ReentrantLock receiveLock = new ReentrantLock();
@@ -14,9 +14,6 @@ public class TrafficStats {
         sendTracker = 0;
         receiveTracker = 0;
         relayTracker = 0;
-        directMessageReceiveTracker = 0;
-        directMessageSentTracker = 0;
-        messageTracker = 0;
         sendSummation = 0L;
         receiveSummation = 0L;
     }
@@ -47,18 +44,6 @@ public class TrafficStats {
 //        }
     }
 
-    public synchronized void incrementDirectMessageReceiveTracker() {
-        this.directMessageReceiveTracker++;
-    }
-
-    public synchronized void incrementDirectMessageSentTracker() {
-        this.directMessageSentTracker++;
-    }
-
-    public synchronized void incrementMessageTracker() {
-        this.messageTracker++;
-    }
-
     public int getSendTracker() {
         return sendTracker;
     }
@@ -69,18 +54,6 @@ public class TrafficStats {
 
     public int getRelayTracker() {
         return relayTracker;
-    }
-
-    public int getDirectMessageReceiveTracker() {
-        return directMessageReceiveTracker;
-    }
-
-    public int getDirectMessageSentTracker() {
-        return directMessageSentTracker;
-    }
-
-    public int getMessageTracker() {
-        return messageTracker;
     }
 
     public long getSendSummation() {

@@ -174,9 +174,6 @@ public class Registry implements Node {
         int totalReceived = 0;
         long totalReceiveSum = 0L;
         int totalRelay = 0;
-        int totalDirectMessagesReceived = 0;
-        int totalDirectMessagesSent = 0;
-        int totalAllMessages = 0;
         String horizontalTablePiece = "";
         int numDashes = 19;
         for (int i = 0; i < numDashes; i++) {
@@ -200,9 +197,6 @@ public class Registry implements Node {
             int messagesReceived = response.getMessagesReceived();
             long receivedSummation = response.getReceivedSummation();
             int messagesRelayed = response.getMessagesRelayed();
-            int directMessagesReceived = response.getDirectMessagesReceived();
-            int directMessagesSent = response.getDirectMessagesSent();
-            int allMessages = response.getMessages();
 
             String id = ipAddress + ":" + portNumber;
 
@@ -213,9 +207,6 @@ public class Registry implements Node {
             totalReceived += messagesReceived;
             totalReceiveSum += receivedSummation;
             totalRelay += messagesRelayed;
-            totalDirectMessagesReceived += directMessagesReceived;
-            totalDirectMessagesSent += directMessagesSent;
-            totalAllMessages += allMessages;
         }
         System.out.println(tableLine);
         System.out.println(String.format("| %-17s | %17d | %17d | %17d | %17d | %17d |", "TOTAL", totalSent, totalReceived, totalSentSum, totalReceiveSum, totalRelay));
@@ -223,7 +214,6 @@ public class Registry implements Node {
     }
 
     private void sendPullTrafficSummaryMessage() {
-        // All nodes have finished SENDING messages. They aren't necessarily done receiving/relaying them.
         int numSeconds = 15;
         System.out.println("All nodes done sending messages, waiting for " + numSeconds + "s to send TaskSummaryRequest...");
         try {
