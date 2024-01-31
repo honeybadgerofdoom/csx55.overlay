@@ -23,25 +23,25 @@ public class TrafficStats {
         this.sendSummation += payload;
     }
 
-    public synchronized void updateReceivedMessages(long payload) {
-//        try {
-//            this.receiveLock.lock();
-//        } catch (Exception ignored) {
+    public void updateReceivedMessages(long payload) {
+        try {
+            this.receiveLock.lock();
             this.receiveTracker++;
             this.receiveSummation += payload;
-//        } finally {
-//            this.receiveLock.unlock();
-//        }
+        } catch (Exception ignored) {
+        } finally {
+            this.receiveLock.unlock();
+        }
     }
 
-    public synchronized void incrementRelayTracker() {
-//        try {
-//            this.relayLock.lock();
-//        } catch (Exception ignored) {
+    public void incrementRelayTracker() {
+        try {
+            this.relayLock.lock();
             this.relayTracker++;
-//        } finally {
-//            this.relayLock.unlock();
-//        }
+        } catch (Exception ignored) {
+        } finally {
+            this.relayLock.unlock();
+        }
     }
 
     public int getSendTracker() {

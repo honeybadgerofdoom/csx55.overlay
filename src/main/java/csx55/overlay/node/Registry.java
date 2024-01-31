@@ -18,7 +18,7 @@ public class Registry implements Node {
 
     private final int portNumber;
     private ServerSocket serverSocket;
-    private ConcurrentHashMap<String, Socket> registryNodes;
+    private final ConcurrentHashMap<String, Socket> registryNodes;
     private OverlayCreator overlayCreator;
     private ConcurrentLinkedQueue<EventAndSocket> eventQueue;
     private ConcurrentHashMap<String, TaskSummaryResponse> taskResponseMap;
