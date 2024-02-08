@@ -165,6 +165,8 @@ public class Registry implements Node {
         System.out.println(key + " reporting traffic summary data (" + this.taskSummariesCollected + "/" + this.registryNodes.size() + ")");
         if (this.taskSummariesCollected == this.registryNodes.size()) {
             printFinalOutput();
+            this.numberOfDoneNodes = 0;
+            this.taskSummariesCollected = 0;
         }
     }
 
