@@ -40,7 +40,6 @@ public class MessagePassingThread implements Runnable {
                 trafficStats.updateSentMessages(payload);
             }
         }
-        System.out.println("Finished sending messages.");
         this.node.reportAllMessagesPassed();
     }
     

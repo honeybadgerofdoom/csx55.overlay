@@ -13,6 +13,7 @@ import csx55.overlay.util.EventAndSocket;
 import csx55.overlay.util.OverlayCreator;
 import csx55.overlay.wireformats.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Registry implements Node {
 
@@ -24,6 +25,8 @@ public class Registry implements Node {
     private ConcurrentHashMap<String, TaskSummaryResponse> taskResponseMap;
     private int numberOfDoneNodes = 0;
     private int taskSummariesCollected = 0;
+    private final ReentrantLock doneNodesLock = new ReentrantLock();
+    private final ReentrantLock taskSummariesLock = new ReentrantLock();
 
     public Registry(int portNumber) {
         this.portNumber = portNumber;
@@ -38,6 +41,28 @@ public class Registry implements Node {
         initializeOutputMaps();
     }
 
+    private boolean checkDoneNodesNumber() {
+        try {
+            this.doneNodesLock.lock();
+            this.numberOfDoneNodes++;
+        } catch (Exception ignored) {
+        } finally {
+            this.doneNodesLock.unlock();
+        }
+        return this.numberOfDoneNodes == registryNodes.size();
+    }
+
+    private boolean checkTaskSummariesNumber() {
+        try {
+            this.taskSummariesLock.lock();
+            this.taskSummariesCollected++;
+        } catch (Exception ignored) {
+        } finally {
+            this.taskSummariesLock.unlock();
+        }
+        return this.taskSummariesCollected == registryNodes.size();
+    }
+
     private void assignServerSocket() {
         try {
             this.serverSocket = new ServerSocket(this.portNumber);
@@ -49,8 +74,11 @@ public class Registry implements Node {
     private void startEventQueue() {
         this.eventQueue = new ConcurrentLinkedQueue<>();
         EventProcessorThread eventProcessorThread = new EventProcessorThread(this);
-        Thread thread = new Thread(eventProcessorThread);
-        thread.start();
+        int numberOfWorkers = 5;
+        for (int i = 0; i < numberOfWorkers; i++) {
+            Thread thread = new Thread(eventProcessorThread);
+            thread.start();
+        }
     }
 
     public void manageCLI() {
@@ -101,7 +129,7 @@ public class Registry implements Node {
         }
     }
 
-    private void handleRegisterRequest(Event event, Socket socket) {
+    private synchronized void handleRegisterRequest(Event event, Socket socket) {
         /*
          * TODO
          *  - 'When a registry receives a request, ... ensures the IP address in the message matches the address where the request originated.'
@@ -125,7 +153,7 @@ public class Registry implements Node {
         }
     }
 
-    private void handleDeregisterRequest(Event event, Socket socket) {
+    private synchronized void handleDeregisterRequest(Event event, Socket socket) {
         /*
          * TODO
          *  - 'When a registry receives a request, ... ensures the IP address in the message matches the address where the request originated.'
@@ -148,8 +176,7 @@ public class Registry implements Node {
     }
 
     private synchronized void handleTaskComplete() {
-        this.numberOfDoneNodes++;
-        if (this.numberOfDoneNodes == this.registryNodes.size()) {
+        if (checkDoneNodesNumber()) {
             sendPullTrafficSummaryMessage();
         }
     }
@@ -161,9 +188,7 @@ public class Registry implements Node {
         String key = ipAddress + ":" + port;
         this.taskResponseMap.put(key, ((TaskSummaryResponse) event));
 
-        this.taskSummariesCollected++;
-        System.out.println(key + " reporting traffic summary data (" + this.taskSummariesCollected + "/" + this.registryNodes.size() + ")");
-        if (this.taskSummariesCollected == this.registryNodes.size()) {
+        if (checkTaskSummariesNumber()) {
             printFinalOutput();
             this.numberOfDoneNodes = 0;
             this.taskSummariesCollected = 0;
