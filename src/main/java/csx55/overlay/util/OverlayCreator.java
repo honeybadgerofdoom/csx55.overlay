@@ -138,7 +138,8 @@ public class OverlayCreator {
     }
 
     private void fillMatrix() {
-        int p = this.numberOfLinks;
+//        int p = this.numberOfLinks;
+        int p = this.size - 2;
         while (p > 1 && matrixIsNotFull()) {
             for (int i = 0; i < this.size; i++) {
                 if (rowIsFull(i)) continue;
