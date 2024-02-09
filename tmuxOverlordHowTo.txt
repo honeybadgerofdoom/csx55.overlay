@@ -1,0 +1,36 @@
+README
+tmuxOverlord.sh: creates a tmux session that has a pane connected to the specified machines.
+
+Before using:
+    Update the hosts array to the computers you want to use
+    Update tmux-session-name to rename the window (optional)
+
+Prereqs not covered in this readme:
+    Having password-less ssh setup between school machines.
+        Directions here: https://sna.cs.colostate.edu/remote-connection/ssh/keybased/
+    Basic understanding of tmux (basically just ctrl-b to send command to tmux instead of the pane)
+    Either add "module load courses/cs555" to your .bashrc, add it to the script commands, or load it
+    manually in the tmux session panes. (Recommend adding it to .bashrc)
+
+Recommendations:
+    Kill the tmux session everytime you are closing the terminal- it runs in the background so
+    detaching or simply closing the terminal is insufficient for ending the tmux process.
+
+Helpful commands for this usage:
+    Start the tmux window:
+        bash start-tmux-template.sh
+    detach from session:
+        ctrl-b d
+    attach to session:
+        tmux attach -t tmux-session-name
+    kill session:
+        ctrl-b : kill-session
+    change pane:
+        ctrl-b <arrow>
+    toggle layout:
+        ctrl-b spacebar
+    send commands to all panes:
+        ctrl-b : setw synchronize-panes
+
+More commands:
+    https://tmuxcheatsheet.com/

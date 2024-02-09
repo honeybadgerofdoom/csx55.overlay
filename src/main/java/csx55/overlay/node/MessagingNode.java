@@ -81,7 +81,7 @@ public class MessagingNode implements Node {
     private void startEventQueue() {
         this.eventQueue = new ConcurrentLinkedQueue<>();
         EventProcessorThread eventProcessorThread = new EventProcessorThread(this);
-        int numberOfWorkers = 3;
+        int numberOfWorkers = 8;
         for (int i = 0; i < numberOfWorkers; i++) {
             Thread thread = new Thread(eventProcessorThread);
             thread.start();
@@ -265,7 +265,6 @@ public class MessagingNode implements Node {
 
     private void handleTaskInitiate(Event event) {
         int numberOfRounds = ((TaskInitiate) event).getRounds();
-        System.out.println("Beginning message passing with " + numberOfRounds + " rounds");
         buildPathRoutes();
         try { Thread.sleep(500); } catch (InterruptedException e) { }
         sendMessages(numberOfRounds);
