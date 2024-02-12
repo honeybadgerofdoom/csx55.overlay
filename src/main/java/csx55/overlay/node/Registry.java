@@ -1,6 +1,7 @@
 package csx55.overlay.node;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
@@ -129,16 +130,22 @@ public class Registry implements Node {
         }
     }
 
+    private synchronized boolean checkIpAddress(Socket socket, String ip){
+        InetAddress inetAddress = socket.getInetAddress();
+        String remoteAddress = inetAddress.getHostName();
+        int index = remoteAddress.indexOf(".");
+        String socketString = remoteAddress.substring(0, index);
+        return ip.equals(socketString);
+    }
+
     private synchronized void handleRegisterRequest(Event event, Socket socket) {
-        /*
-         * TODO
-         *  - 'When a registry receives a request, ... ensures the IP address in the message matches the address where the request originated.'
-         *  - Throw an error if the above condition is not met
-         * */
         String additionalInfo = "Register request unsuccessful. MessagingNode is already in the registry.";
         byte statusCode = Protocol.FAILURE;
-        String mapKey = ((RegisterRequest) event).getIpAddress() + ":" + ((RegisterRequest) event).getPortNumber();
-        if (!this.registryNodes.containsKey(mapKey)) {
+        String remoteAddress = ((RegisterRequest) event).getIpAddress();
+        boolean match = checkIpAddress(socket, remoteAddress);
+        if (!match) additionalInfo = "Register request unsuccessful. Ip address did not match.";
+        String mapKey = remoteAddress + ":" + ((RegisterRequest) event).getPortNumber();
+        if (!this.registryNodes.containsKey(mapKey) && match) {
             this.registryNodes.put(mapKey, socket);
             statusCode = Protocol.SUCCESS;
             additionalInfo = "Register request successful. The number of messaging nodes currently constituting the overlay is (" + this.registryNodes.size() + ")";
@@ -154,14 +161,11 @@ public class Registry implements Node {
     }
 
     private synchronized void handleDeregisterRequest(Event event, Socket socket) {
-        /*
-         * TODO
-         *  - 'When a registry receives a request, ... ensures the IP address in the message matches the address where the request originated.'
-         *  - Throw an error if the above condition is not met
-         * */
         byte statusCode = Protocol.FAILURE;
-        String mapKey = ((DeregisterRequest) event).getIpAddress() + ":" + ((DeregisterRequest) event).getPortNumber();
-        if (this.registryNodes.containsKey(mapKey)) {
+        String remoteAddress = ((DeregisterRequest) event).getIpAddress();
+        boolean match = checkIpAddress(socket, remoteAddress);
+        String mapKey = remoteAddress + ":" + ((DeregisterRequest) event).getPortNumber();
+        if (this.registryNodes.containsKey(mapKey) && match) {
             statusCode = Protocol.SUCCESS;
             this.registryNodes.remove(mapKey);
         }
