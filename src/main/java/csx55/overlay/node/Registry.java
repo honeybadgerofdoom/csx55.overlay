@@ -43,10 +43,12 @@ public class Registry implements Node {
     }
 
     public void handleSocketClose(String socketString) {
-        System.out.println("Closing " + socketString);
         for (Map.Entry<String, Socket> entry : this.registryNodes.entrySet()) {
-            System.out.println("Assesing equality for " + entry.getValue().toString());
-            if (entry.getValue().toString().equals(socketString)) this.registryNodes.remove(entry.getKey());
+            String currentSocketString = entry.getValue().toString();
+            String ip = "/" + currentSocketString.split("/")[1].split(",")[0];
+            String port = currentSocketString.split("port=")[1].split(",")[0];
+            String addr = ip + ":" + port;
+            if (addr.equals(socketString)) this.registryNodes.remove(entry.getKey());
         }
     }
 
@@ -286,7 +288,6 @@ public class Registry implements Node {
         for (Map.Entry<String, Socket> entry : this.registryNodes.entrySet()) {
             if (entry.getValue() == null) this.registryNodes.remove(entry.getKey());
         }
-        System.out.println(this.registryNodes.size() + " Node in registry");
         List<String> nodes = new ArrayList<>(this.registryNodes.keySet());
         this.overlayCreator = new OverlayCreator(nodes, numberOfLinks);
         this.overlayCreator.createOverlay();
