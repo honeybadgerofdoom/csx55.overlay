@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.io.IOException;
 
 import csx55.overlay.node.Node;
+import csx55.overlay.node.Registry;
 import csx55.overlay.wireformats.Event;
 import csx55.overlay.wireformats.EventFactory;
 
@@ -42,6 +43,9 @@ public class TCPReceiverThread implements Runnable {
             }
         }
         System.out.println("TCPReceiverThread listening on Socket with remote address " + this.socketString + " has closed.");
+        if (this.node instanceof Registry) {
+            ((Registry) this.node).handleSocketClose(this.socketString);
+        }
     }
     
 }
