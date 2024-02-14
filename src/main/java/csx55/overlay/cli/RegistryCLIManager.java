@@ -43,6 +43,9 @@ public class RegistryCLIManager implements Runnable, CLIManager {
             case "print-overlay":
                 this.node.printOverlay();
                 break;
+            case "list-weights":
+                this.node.listWeights();
+                break;
             case "print-matrix":
                 this.node.printMatrix();
                 break;
