@@ -42,6 +42,16 @@ public class Registry implements Node {
         initializeOutputMaps();
     }
 
+    public void handleSocketClose(String socketString) {
+        for (Map.Entry<String, Socket> entry : this.registryNodes.entrySet()) {
+            String currentSocketString = entry.getValue().toString();
+            String ip = "/" + currentSocketString.split("/")[1].split(",")[0];
+            String port = currentSocketString.split("port=")[1].split(",")[0];
+            String addr = ip + ":" + port;
+            if (addr.equals(socketString)) this.registryNodes.remove(entry.getKey());
+        }
+    }
+
     private boolean checkDoneNodesNumber() {
         try {
             this.doneNodesLock.lock();
@@ -269,15 +279,15 @@ public class Registry implements Node {
         if (numberOfLinks > this.registryNodes.size()) {
             System.out.println("ERROR Number of links (" + numberOfLinks + ") is greater than the size of the overlay (" + this.registryNodes.size() + ")");
         }
-        // if (numberOfLinks == 1) {
-        //     System.out.println("ERROR Number of links must be > 1, else we have partitions in our graph.");
-        // }
         else {
             createOverlay(numberOfLinks);
         }
     }
 
     private void createOverlay(int numberOfLinks) {
+        for (Map.Entry<String, Socket> entry : this.registryNodes.entrySet()) {
+            if (entry.getValue() == null) this.registryNodes.remove(entry.getKey());
+        }
         List<String> nodes = new ArrayList<>(this.registryNodes.keySet());
         this.overlayCreator = new OverlayCreator(nodes, numberOfLinks);
         this.overlayCreator.createOverlay();
