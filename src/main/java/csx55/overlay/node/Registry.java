@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import csx55.overlay.cli.RegistryCLIManager;
+import csx55.overlay.dijkstra.ConnectedNode;
 import csx55.overlay.transport.TCPSender;
 import csx55.overlay.transport.EventProcessorThread;
 import csx55.overlay.util.EventAndSocket;
@@ -40,6 +41,10 @@ public class Registry implements Node {
         startEventQueue();
         manageCLI();
         initializeOutputMaps();
+    }
+
+    public void listWeights() {
+        this.overlayCreator.listWeights();
     }
 
     public void handleSocketClose(String socketString) {

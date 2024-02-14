@@ -14,6 +14,7 @@ public class OverlayCreator {
     private final int size;
     private int[][] matrix;
     private Map<String, List<ConnectedNode>> overlay;
+    private Map<String, List<ConnectedNode>> overlayRepresentation;
 
     public OverlayCreator(List<String> nodes, int numberOfLinks) {
         this.nodes = nodes;
@@ -34,6 +35,7 @@ public class OverlayCreator {
         connectMatrixNeighbors();
         fillMatrix();
         matrixToOverlay();
+        matrixToOverlayRepresentation();
     }
 
     public Map<String, MessagingNodesList> overlayToMessagingNodesListMap() {
@@ -74,6 +76,16 @@ public class OverlayCreator {
         System.out.println(overlayString);
     }
 
+    public void listWeights() {
+        String overlayString = "{\n";
+        for (String key : this.overlayRepresentation.keySet()) {
+            List<ConnectedNode> connectedNodesList = this.overlayRepresentation.get(key);
+            overlayString += "\t" + key + ": " + getConnectedNodeListString(connectedNodesList) + "\n";
+        }
+        overlayString += "}";
+        System.out.println(overlayString);
+    }
+
     private void matrixToOverlay() {
         this.overlay = new HashMap<>();
         for (int i = 0; i < this.size; i++) {
@@ -88,6 +100,22 @@ public class OverlayCreator {
                 connectedNodes.add(connectedNode);
             }
             this.overlay.put(node, connectedNodes);
+        }
+    }
+
+    private void matrixToOverlayRepresentation() {
+        this.overlayRepresentation = new HashMap<>();
+        for (int i = 0; i < this.size; i++) {
+            String node = this.nodes.get(i);
+            List<ConnectedNode> connectedNodes = new ArrayList<>();
+            for (int j = 0; j < this.size; j++) {
+                int weight = this.matrix[i][j];
+                if (weight == 0) continue;
+                String partner = this.nodes.get(j);
+                ConnectedNode connectedNode = new ConnectedNode(partner, weight);
+                connectedNodes.add(connectedNode);
+            }
+            this.overlayRepresentation.put(node, connectedNodes);
         }
     }
 
