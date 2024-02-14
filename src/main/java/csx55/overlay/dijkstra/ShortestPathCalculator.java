@@ -44,6 +44,7 @@ public class ShortestPathCalculator {
         Map<String, List<ConnectedNode>> linkWeightMap = this.graph.getLinkWeightMap();
         for (String key : this.pathMap.keySet()) {
             List<String> path = this.pathMap.get(key);
+            if (path.size() == 1) continue;
             // path.add(key);
             String pathString = "\t";
             for (int i = 0; i < path.size(); i++) {

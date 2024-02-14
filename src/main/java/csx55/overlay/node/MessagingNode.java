@@ -252,6 +252,7 @@ public class MessagingNode implements Node {
             }
         }
         System.out.println("Link weights are received and processed. Ready to send messages.");
+        buildPathRoutes();
     }
 
     private void handlePartnerConnection(Event event, Socket socket) {
@@ -265,7 +266,6 @@ public class MessagingNode implements Node {
 
     private void handleTaskInitiate(Event event) {
         int numberOfRounds = ((TaskInitiate) event).getRounds();
-        buildPathRoutes();
         try { Thread.sleep(500); } catch (InterruptedException e) { }
         sendMessages(numberOfRounds);
     }
